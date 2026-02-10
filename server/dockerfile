@@ -1,0 +1,21 @@
+FROM node:20-alpine as base 
+
+WORKDIR /app 
+
+FROM base as development 
+
+COPY package.json .
+RUN npm install 
+
+COPY . . 
+
+EXPOSE 5000
+CMD ["npx","nodemon", "index.js" ]
+
+
+FROM base as production 
+
+COPY package.json .
+RUN npm install --only=production
+EXPOSE 5000
+CMD ["node", "index.js"]
