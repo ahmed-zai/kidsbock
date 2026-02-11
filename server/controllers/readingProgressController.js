@@ -1,4 +1,4 @@
-const readingProgressModel = require('../models/readingProgressModel');
+const progressModel = require('../models/progressModel');
 
 const readingProgressController = {
 

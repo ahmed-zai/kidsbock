@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middlewares/authMiddleware');
-const childController = require('../controllers/childController');
+const { protect } = require('../middleware/authMiddleware');
+const childController = require('../controllers/childrenController');
 
 // Protected routes
 router.post('/', protect, childController.createChild);

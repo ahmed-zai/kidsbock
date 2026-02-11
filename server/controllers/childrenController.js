@@ -6,8 +6,9 @@ const childController = {
     try {
       const { name, birth_date, avatar_url, reading_level } = req.body;
       const user_id = req.user.id;
+      const formattedBirthDate = birth_date ? new Date(birth_date).toISOString() : null;
 
-      const child = await childModel.createChild({ user_id, name, birth_date, avatar_url, reading_level });
+      const child = await childModel.createChild({ user_id, name, birth_date: formattedBirthDate, avatar_url, reading_level });
       res.status(201).json({ child });
     } catch (err) {
       console.error('Error in createChild:', err);
@@ -19,7 +20,11 @@ const childController = {
     try {
       const user_id = req.user.id;
       const children = await childModel.getChildrenByUser(user_id);
-      res.status(200).json({ children });
+      const formattedChildren = children.map(child => ({
+        ...child,
+        birth_date: child.birth_date ? new Date(child.birth_date).toISOString() : null
+      }));
+      res.status(200).json({ children: formattedChildren });
     } catch (err) {
       console.error('Error in getChildren:', err);
       next(err);

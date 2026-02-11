@@ -1,4 +1,4 @@
-const readingSessionModel = require('../models/readingSessionModel');
+const sessionModel = require('../models/sessionModel');
 const childModel = require('../models/childModel'); // for ownership check
 const insightModel = require('../models/insightModel'); // save AI insights
 const { sendSessionToAI } = require('../utils/aiService');

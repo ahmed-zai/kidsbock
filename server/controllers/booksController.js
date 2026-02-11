@@ -1,4 +1,4 @@
-const booksModel = require('../models/booksModel');
+const bookModel = require('../models/bookModel');
 
 const booksController = {
 
