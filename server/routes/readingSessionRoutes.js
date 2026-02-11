@@ -1,10 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const sessionController = require('../controllers/readingSessionController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect } = require('../middlewares/authMiddleware');
+const readingSessionController = require('../controllers/readingSessionController');
 
-// Protected routes
-router.post('/start', protect, sessionController.startSession);
-router.put('/end/:sessionId', protect, sessionController.endSession);
+router.post('/start', protect, readingSessionController.startSession);
+router.put('/end', protect, readingSessionController.endSession);
 
 module.exports = router;

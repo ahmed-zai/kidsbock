@@ -1,138 +1,107 @@
-const bcrypt = require('bcrypt');
 const userModel = require('../models/userModel');
+const bcrypt = require('bcrypt');
+const jwt = require('../utils/jwt'); // your JWT helper
 
+const SALT_ROUNDS = 10;
 
-// ==============================
-// REGISTER USER
-// ==============================
-exports.registerUser = async (req, res) => {
-  try {
-    const { full_name, email, password } = req.body;
+const userController = {
 
-    if (!full_name || !email || !password) {
-      return res.status(400).json({ message: 'All fields are required' });
+  // -----------------------------
+  // REGISTER USER
+  // -----------------------------
+  registerUser: async (req, res, next) => {
+    try {
+      const { full_name, email, password } = req.body;
+
+      // Check if user exists
+      const existingUser = await userModel.findUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email already registered' });
+      }
+
+      // Hash password
+      const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
+
+      // Create user
+      const user = await userModel.createUser({ full_name, email, password_hash });
+
+      // Generate JWT token
+      const token = jwt.generateToken({ id: user.id, email: user.email, role: user.role });
+
+      res.status(201).json({ user, token });
+    } catch (err) {
+      console.error('Error in registerUser:', err);
+      next(err);
     }
+  },
 
-    const existingUser = await userModel.findUserByEmail(email);
-    if (existingUser) {
-      return res.status(409).json({ message: 'Email already registered' });
+  // -----------------------------
+  // LOGIN USER
+  // -----------------------------
+  loginUser: async (req, res, next) => {
+    try {
+      const { email, password } = req.body;
+
+      const user = await userModel.findUserByEmail(email);
+      if (!user) return res.status(400).json({ message: 'Invalid email or password' });
+
+      const isMatch = await bcrypt.compare(password, user.password_hash);
+      if (!isMatch) return res.status(400).json({ message: 'Invalid email or password' });
+
+      const token = jwt.generateToken({ id: user.id, email: user.email, role: user.role });
+
+      res.status(200).json({ user, token });
+    } catch (err) {
+      console.error('Error in loginUser:', err);
+      next(err);
     }
+  },
 
-    const password_hash = await bcrypt.hash(password, 12);
+  // -----------------------------
+  // GET USER PROFILE
+  // -----------------------------
+  getUserProfile: async (req, res, next) => {
+    try {
+      const userId = req.params.id;
 
-    const newUser = await userModel.createUser({
-      full_name,
-      email,
-      password_hash,
-    });
+      // Ensure user can only access their own profile unless admin
+      if (req.user.id !== userId && req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Access denied' });
+      }
 
-    res.status(201).json({
-      message: 'User created successfully',
-      user: newUser,
-    });
+      const user = await userModel.getUserById(userId);
+      if (!user) return res.status(404).json({ message: 'User not found' });
 
-  } catch (error) {
-    console.error('Register Error:', error);
-    res.status(500).json({ message: 'Server error' });
+      res.status(200).json({ user });
+    } catch (err) {
+      console.error('Error in getUserProfile:', err);
+      next(err);
+    }
+  },
+
+  // -----------------------------
+  // UPDATE USER PLAN
+  // -----------------------------
+  updatePlan: async (req, res, next) => {
+    try {
+      const userId = req.params.id;
+      const { plan_type } = req.body;
+
+      // Only admin or user themselves can update
+      if (req.user.id !== userId && req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+
+      const updatedUser = await userModel.updateUserPlan(userId, plan_type);
+      if (!updatedUser) return res.status(404).json({ message: 'User not found' });
+
+      res.status(200).json({ user: updatedUser });
+    } catch (err) {
+      console.error('Error in updatePlan:', err);
+      next(err);
+    }
   }
+
 };
 
-
-// ==============================
-// LOGIN USER
-// ==============================
-exports.loginUser = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    const user = await userModel.findUserByEmail(email);
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password' });
-    }
-
-    const validPassword = await bcrypt.compare(password, user.password_hash);
-    if (!validPassword) {
-      return res.status(401).json({ message: 'Invalid email or password' });
-    }
-
-    res.json({
-      message: 'Login successful',
-      user: {
-        id: user.id,
-        full_name: user.full_name,
-        email: user.email,
-        role: user.role,
-        plan_type: user.plan_type,
-      },
-    });
-
-  } catch (error) {
-    console.error('Login Error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-
-// ==============================
-// GET USER PROFILE
-// ==============================
-exports.getUserProfile = async (req, res) => {
-  try {
-    const userId = req.params.id;
-
-    const user = await userModel.getUserById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    res.json(user);
-
-  } catch (error) {
-    console.error('Profile Error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-
-// ==============================
-// UPDATE USER PLAN (FREE → PREMIUM)
-// ==============================
-exports.updatePlan = async (req, res) => {
-  try {
-    const userId = req.params.id;
-    const { plan_type } = req.body; // 'free' or 'premium'
-
-    if (!['free', 'premium'].includes(plan_type)) {
-      return res.status(400).json({ message: 'Invalid plan type' });
-    }
-
-    const updatedUser = await userModel.updateUserPlan(userId, plan_type);
-
-    res.json({
-      message: 'Plan updated successfully',
-      user: updatedUser,
-    });
-
-  } catch (error) {
-    console.error('Plan Update Error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-
-// ==============================
-// DELETE USER (ADMIN FEATURE)
-// ==============================
-exports.deleteUser = async (req, res) => {
-  try {
-    const userId = req.params.id;
-
-    await userModel.deleteUser(userId); // make sure this exists in model
-
-    res.json({ message: 'User deleted successfully' });
-
-  } catch (error) {
-    console.error('Delete Error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+module.exports = userController;

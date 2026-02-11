@@ -1,11 +1,18 @@
-const eventModel = require('../models/pageEventModel');
+const pageEventModel = require('../models/pageEventModel');
 
-// Track page interaction
-exports.addPageEvent = async (req, res) => {
-  try {
-    const event = await eventModel.createPageEvent(req.body);
-    res.status(201).json(event);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+const pageEventController = {
+
+  addPageEvent: async (req, res, next) => {
+    try {
+      const { session_id, page_number, event_type, time_spent_seconds } = req.body;
+      const event = await pageEventModel.addPageEvent({ session_id, page_number, event_type, time_spent_seconds });
+      res.status(201).json({ event });
+    } catch (err) {
+      console.error('Error in addPageEvent:', err);
+      next(err);
+    }
   }
+
 };
+
+module.exports = pageEventController;

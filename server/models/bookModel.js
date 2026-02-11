@@ -1,23 +1,55 @@
-const db = require('./db');
+const booksModel = {
 
-async function getBooksForUser(planType) {
-  let query = `SELECT * FROM books WHERE is_published = true`;
-  const params = [];
+  createBook: async ({ title, description, cover_image_url, content_url, audio_url, reading_level, age_min, age_max, is_published = false, is_premium = false }) => {
+    const query = `
+      INSERT INTO books (title, description, cover_image_url, content_url, audio_url, reading_level, age_min, age_max, is_published, is_premium)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      RETURNING *
+    `;
+    const values = [title, description, cover_image_url, content_url, audio_url, reading_level, age_min, age_max, is_published, is_premium];
+    const { rows } = await global.db.query(query, values);
+    return rows[0];
+  },
 
-  if (planType === 'free') {
-    query += ` AND is_premium = false`;
+  getAllBooks: async () => {
+    const query = `SELECT * FROM books WHERE is_published = true`;
+    const { rows } = await global.db.query(query);
+    return rows;
+  },
+
+  getBookById: async (id) => {
+    const query = `SELECT * FROM books WHERE id = $1`;
+    const { rows } = await global.db.query(query, [id]);
+    return rows[0];
+  },
+
+  updateBook: async (id, fields = {}) => {
+    const setClauses = [];
+    const values = [];
+    let i = 1;
+    for (const key in fields) {
+      setClauses.push(`${key} = $${i}`);
+      values.push(fields[key]);
+      i++;
+    }
+    values.push(id);
+    if (setClauses.length === 0) return null;
+
+    const query = `
+      UPDATE books
+      SET ${setClauses.join(', ')}, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $${i}
+      RETURNING *
+    `;
+    const { rows } = await global.db.query(query, values);
+    return rows[0];
+  },
+
+  deleteBook: async (id) => {
+    const query = `DELETE FROM books WHERE id = $1 RETURNING id`;
+    const { rows } = await global.db.query(query, [id]);
+    return rows[0];
   }
+};
 
-  const result = await db.query(query, params);
-  return result.rows;
-}
-
-async function getBookById(bookId) {
-  const result = await db.query(
-    `SELECT * FROM books WHERE id = $1 AND is_published = true`,
-    [bookId]
-  );
-  return result.rows[0];
-}
-
-module.exports = { getBooksForUser, getBookById };
+module.exports = booksModel;

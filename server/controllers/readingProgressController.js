@@ -1,30 +1,37 @@
-const progressModel = require('../models/readingProgressModel');
+const readingProgressModel = require('../models/readingProgressModel');
 
-// Save or update reading progress
-exports.updateProgress = async (req, res) => {
-  try {
-    const { child_id, book_id, last_page_read, progress_percent, completed } = req.body;
+const readingProgressController = {
 
-    const progress = await progressModel.upsertProgress({
-      child_id,
-      book_id,
-      last_page_read,
-      progress_percent,
-      completed,
-    });
+  updateProgress: async (req, res, next) => {
+    try {
+      const { child_id, book_id, last_page_read, progress_percent, completed } = req.body;
 
-    res.json(progress);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+      // Ensure user owns the child
+      if (req.user.role !== 'admin' && req.user.id !== child_id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+
+      const progress = await readingProgressModel.updateProgress({ child_id, book_id, last_page_read, progress_percent, completed });
+      res.status(200).json({ progress });
+    } catch (err) {
+      console.error('Error in updateProgress:', err);
+      next(err);
+    }
+  },
+
+  getProgressByChild: async (req, res, next) => {
+    try {
+      const child_id = req.params.child_id;
+      if (req.user.role !== 'admin' && req.user.id !== child_id) return res.status(403).json({ message: 'Access denied' });
+
+      const progress = await readingProgressModel.getProgressByChild(child_id);
+      res.status(200).json({ progress });
+    } catch (err) {
+      console.error('Error in getProgressByChild:', err);
+      next(err);
+    }
   }
+
 };
 
-// Get child progress
-exports.getChildProgress = async (req, res) => {
-  try {
-    const progress = await progressModel.getProgressByChild(req.params.childId);
-    res.json(progress);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+module.exports = readingProgressController;

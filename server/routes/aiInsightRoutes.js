@@ -1,10 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const aiInsightController = require('../controllers/aiInsightController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect } = require('../middlewares/authMiddleware');
+const insightController = require('../controllers/insightController');
 
-// Protected routes
-router.post('/', protect, aiInsightController.saveInsight);
-router.get('/:childId', protect, aiInsightController.getChildInsights);
+router.post('/', protect, insightController.saveInsight);
+router.get('/:child_id', protect, insightController.getInsightsByChild);
 
 module.exports = router;

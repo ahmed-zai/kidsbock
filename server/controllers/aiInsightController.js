@@ -1,21 +1,34 @@
 const insightModel = require('../models/insightModel');
 
-// Save AI-generated insight
-exports.saveInsight = async (req, res) => {
-  try {
-    const insight = await insightModel.createInsight(req.body);
-    res.status(201).json(insight);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+const insightController = {
+
+  saveInsight: async (req, res, next) => {
+    try {
+      const { child_id, insight_type, score, summary } = req.body;
+
+      if (req.user.role !== 'admin' && req.user.id !== child_id) return res.status(403).json({ message: 'Access denied' });
+
+      const insight = await insightModel.saveInsight({ child_id, insight_type, score, summary });
+      res.status(201).json({ insight });
+    } catch (err) {
+      console.error('Error in saveInsight:', err);
+      next(err);
+    }
+  },
+
+  getInsightsByChild: async (req, res, next) => {
+    try {
+      const child_id = req.params.child_id;
+      if (req.user.role !== 'admin' && req.user.id !== child_id) return res.status(403).json({ message: 'Access denied' });
+
+      const insights = await insightModel.getInsightsByChild(child_id);
+      res.status(200).json({ insights });
+    } catch (err) {
+      console.error('Error in getInsightsByChild:', err);
+      next(err);
+    }
   }
+
 };
 
-// Get insights for a child
-exports.getChildInsights = async (req, res) => {
-  try {
-    const insights = await insightModel.getInsightsByChild(req.params.childId);
-    res.json(insights);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+module.exports = insightController;

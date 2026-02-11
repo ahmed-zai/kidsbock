@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const childrenController = require('../controllers/childrenController');
-const { protect } = require('../middleware/authMiddleware');
-const { restrictTo } = require('../middleware/roleMiddleware');
+const { protect } = require('../middlewares/authMiddleware');
+const childController = require('../controllers/childController');
 
 // Protected routes
-router.post('/', protect, childrenController.createChild);
-router.get('/', protect, childrenController.getChildrenByUser);
-router.put('/:childId', protect, childrenController.updateChild);
-router.delete('/:childId', protect, childrenController.deleteChild);
+router.post('/', protect, childController.createChild);
+router.get('/', protect, childController.getChildren);
+router.get('/:id', protect, childController.getChildById);
+router.put('/:id', protect, childController.updateChild);
+router.delete('/:id', protect, childController.deleteChild);
 
 module.exports = router;

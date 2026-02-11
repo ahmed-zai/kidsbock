@@ -1,10 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const progressController = require('../controllers/readingProgressController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect } = require('../middlewares/authMiddleware');
+const readingProgressController = require('../controllers/readingProgressController');
 
-// Protected routes
-router.post('/', protect, progressController.updateProgress);
-router.get('/:childId', protect, progressController.getChildProgress);
+router.post('/', protect, readingProgressController.updateProgress);
+router.get('/:child_id', protect, readingProgressController.getProgressByChild);
 
 module.exports = router;

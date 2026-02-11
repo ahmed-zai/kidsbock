@@ -1,15 +1,13 @@
 const express = require('express');
 const router = express.Router();
+const { protect } = require('../middlewares/authMiddleware');
 const booksController = require('../controllers/booksController');
-const { protect } = require('../middleware/authMiddleware');
-const { restrictTo } = require('../middleware/roleMiddleware');
 
-// Public routes
-router.get('/', booksController.getAllBooks);
-router.get('/:bookId', booksController.getBookDetails);
-
-// Admin-only routes
-router.post('/', protect, restrictTo('admin'), booksController.createBook);
-router.put('/:bookId', protect, restrictTo('admin'), booksController.updateBook);
+// Protected routes (admin only for create/update/delete)
+router.post('/', protect, booksController.createBook);
+router.get('/', protect, booksController.getAllBooks);
+router.get('/:id', protect, booksController.getBookById);
+router.put('/:id', protect, booksController.updateBook);
+router.delete('/:id', protect, booksController.deleteBook);
 
 module.exports = router;

@@ -1,41 +1,60 @@
-const bookModel = require('../models/bookModel');
+const booksModel = require('../models/booksModel');
 
-// Get all published books
-exports.getAllBooks = async (req, res) => {
-  try {
-    const books = await bookModel.getAllPublishedBooks();
-    res.json(books);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+const booksController = {
+
+  createBook: async (req, res, next) => {
+    try {
+      const book = await booksModel.createBook(req.body);
+      res.status(201).json({ book });
+    } catch (err) {
+      console.error('Error in createBook:', err);
+      next(err);
+    }
+  },
+
+  getAllBooks: async (req, res, next) => {
+    try {
+      const books = await booksModel.getAllBooks();
+      res.status(200).json({ books });
+    } catch (err) {
+      console.error('Error in getAllBooks:', err);
+      next(err);
+    }
+  },
+
+  getBookById: async (req, res, next) => {
+    try {
+      const book = await booksModel.getBookById(req.params.id);
+      if (!book) return res.status(404).json({ message: 'Book not found' });
+      res.status(200).json({ book });
+    } catch (err) {
+      console.error('Error in getBookById:', err);
+      next(err);
+    }
+  },
+
+  updateBook: async (req, res, next) => {
+    try {
+      const updatedBook = await booksModel.updateBook(req.params.id, req.body);
+      if (!updatedBook) return res.status(404).json({ message: 'Book not found or nothing to update' });
+      res.status(200).json({ book: updatedBook });
+    } catch (err) {
+      console.error('Error in updateBook:', err);
+      next(err);
+    }
+  },
+
+  deleteBook: async (req, res, next) => {
+    try {
+      const deletedBook = await booksModel.deleteBook(req.params.id);
+      if (!deletedBook) return res.status(404).json({ message: 'Book not found' });
+      res.status(200).json({ message: 'Book deleted', id: deletedBook.id });
+    } catch (err) {
+      console.error('Error in deleteBook:', err);
+      next(err);
+    }
   }
+
 };
 
-// Get single book with pages
-exports.getBookDetails = async (req, res) => {
-  try {
-    const book = await bookModel.getBookWithPages(req.params.bookId);
-    res.json(book);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// Admin: Create book
-exports.createBook = async (req, res) => {
-  try {
-    const book = await bookModel.createBook(req.body);
-    res.status(201).json(book);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// Admin: Update book
-exports.updateBook = async (req, res) => {
-  try {
-    const book = await bookModel.updateBook(req.params.bookId, req.body);
-    res.json(book);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+module.exports = booksController;
