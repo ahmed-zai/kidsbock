@@ -1,6 +1,6 @@
 const childModel = {
 
-  createChild: async ({ user_id, name, birth_date, avatar_url, reading_level = 'beginner' }) => {
+  createChild: async ({ user_id, name, birth_date, avatar_url, reading_level = 1 }) => {
     const query = `
       INSERT INTO children (user_id, name, birth_date, avatar_url, reading_level)
       VALUES ($1, $2, $3, $4, $5)
@@ -35,22 +35,36 @@ const childModel = {
     const setClauses = [];
     const values = [];
     let i = 1;
+
     for (const key in fields) {
       setClauses.push(`${key} = $${i}`);
       values.push(fields[key]);
       i++;
     }
-    values.push(id);
 
     if (setClauses.length === 0) return null;
 
+    values.push(id);
+
     const query = `
       UPDATE children
-      SET ${setClauses.join(', ')}, created_at = CURRENT_TIMESTAMP
+      SET ${setClauses.join(', ')}, updated_at = CURRENT_TIMESTAMP
       WHERE id = $${i}
-      RETURNING id, user_id, name, birth_date, avatar_url, reading_level
+      RETURNING id, user_id, name, birth_date, avatar_url, reading_level, updated_at
     `;
     const { rows } = await global.db.query(query, values);
+    return rows[0];
+  },
+
+  updateReadingLevel: async (child_id, change) => {
+    const query = `
+      UPDATE children
+      SET reading_level = GREATEST(1, reading_level + $2),
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1
+      RETURNING reading_level
+    `;
+    const { rows } = await global.db.query(query, [child_id, change]);
     return rows[0];
   },
 
@@ -63,6 +77,7 @@ const childModel = {
     const { rows } = await global.db.query(query, [id]);
     return rows[0];
   }
+
 };
 
 module.exports = childModel;

@@ -5,5 +5,6 @@ const readingSessionController = require('../controllers/readingSessionControlle
 
 router.post('/start', protect, readingSessionController.startSession);
 router.put('/end', protect, readingSessionController.endSession);
+router.post('/end-batch', protect, controller.endMultipleSession);
 
 module.exports = router;
