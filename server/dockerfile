@@ -17,5 +17,6 @@ FROM base as production
 
 COPY package.json .
 RUN npm install --only=production
+COPY . . 
 EXPOSE 5000
 CMD ["node", "index.js"]
