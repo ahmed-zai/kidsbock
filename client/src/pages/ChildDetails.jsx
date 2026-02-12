@@ -1,76 +1,56 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import api from "../services/api";
-import ProgressChart from "../components/ProgressChart";
+import api from "../api/api";
+import AchievementBadge from "../components/AchievementBadge";
 
 export default function ChildDetails() {
   const { id } = useParams();
   const [child, setChild] = useState(null);
-  const [progress, setProgress] = useState([]);
-  const [insights, setInsights] = useState([]);
+  const [achievements, setAchievements] = useState([]);
 
   useEffect(() => {
     fetchChild();
-    fetchProgress();
-    fetchInsights();
-  }, [id]);
+    fetchAchievements();
+  }, []);
 
   const fetchChild = async () => {
     const res = await api.get(`/children/${id}`);
     setChild(res.data.child);
   };
 
-  const fetchProgress = async () => {
-    const res = await api.get(`/progress/${id}`);
-    setProgress(res.data.progress || []);
+  const fetchAchievements = async () => {
+    const res = await api.get(`/children/${id}/achievements`);
+    setAchievements(res.data.achievements || []);
   };
 
-  const fetchInsights = async () => {
-    const res = await api.get(`/insights/child/${id}`);
-    setInsights(res.data.insights || []);
-  };
-
-  if (!child) return <p className="p-6">Loading child profile...</p>;
+  if (!child) return <p className="p-6">Loading child...</p>;
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Profile Header */}
+    <div className="p-6 space-y-8">
+      {/* Child Info */}
       <div className="bg-white rounded-xl shadow p-6 flex items-center gap-6">
         <img
-          src={child.avatar_url || "https://via.placeholder.com/120"}
-          className="w-28 h-28 rounded-full object-cover"
+          src={child.avatar_url || "https://via.placeholder.com/100"}
+          className="w-24 h-24 rounded-full"
         />
         <div>
           <h1 className="text-2xl font-bold">{child.name}</h1>
-          <p className="text-gray-500">
-            Reading Level: <span className="font-semibold">{child.reading_level}</span>
-          </p>
-          <p className="text-sm text-gray-400">
-            Born: {new Date(child.birth_date).toLocaleDateString()}
-          </p>
+          <p className="text-gray-500">Reading Level: {child.reading_level}</p>
         </div>
       </div>
 
-      {/* Reading Progress Chart */}
-      <div className="bg-white rounded-xl shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Reading Progress</h2>
-        <ProgressChart data={progress} />
-      </div>
-
-      {/* AI Insights */}
-      <div className="bg-white rounded-xl shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">AI Insights</h2>
-        <div className="space-y-3">
-          {insights.map((i) => (
-            <div key={i.id} className="border rounded-lg p-4">
-              <div className="flex justify-between mb-1">
-                <span className="font-semibold capitalize">{i.insight_type}</span>
-                <span className="text-blue-600 font-bold">{i.score}</span>
-              </div>
-              <p className="text-gray-600">{i.summary}</p>
-            </div>
-          ))}
-        </div>
+      {/* Achievements */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4">🏆 Achievements</h2>
+        {achievements.length === 0 ? (
+          <p className="text-gray-500">No achievements yet — keep reading!</p>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {achievements.map(a => (
+              <AchievementBadge key={a.id} achievement={a} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

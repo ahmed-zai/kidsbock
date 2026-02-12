@@ -1,18 +1,21 @@
-import { useAuth } from '../context/AuthContext';
+// src/components/Navbar.jsx
+import React from "react";
+import { useTheme } from "../context/ThemeContext";
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
 
   return (
-    <nav className="bg-blue-600 text-white p-4 flex justify-between items-center">
-      <h1 className="text-xl font-bold">HKids</h1>
-      <div>
-        {user ? (
-          <button onClick={logout} className="bg-red-500 px-3 py-1 rounded">Logout</button>
-        ) : (
-          <span>Guest</span>
-        )}
-      </div>
+    <nav className="flex justify-between items-center px-6 py-3 bg-white dark:bg-gray-800 shadow-md">
+      <h1 className="font-bold text-xl text-gray-800 dark:text-yellow-300">
+        KidsBock
+      </h1>
+      <button
+        onClick={toggleTheme}
+        className="px-4 py-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-yellow-300"
+      >
+        {isDark ? "☀ Light Mode" : "🌙 Dark Mode"}
+      </button>
     </nav>
   );
 }
