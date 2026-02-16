@@ -32,8 +32,7 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem("token");
       if (token) {
         try {
-          // Set token in api headers
-          api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+          // Set token in api headers - REMOVED, now handled by axios interceptor
           const res = await api.get("/users/me");
           setUser(res.data);
         } catch (err) {

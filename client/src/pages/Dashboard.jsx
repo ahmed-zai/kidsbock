@@ -5,6 +5,7 @@ import { useTheme } from "../context/ThemeContext";
 import { FiUsers, FiBook, FiAward, FiActivity, FiMenu, FiX } from "react-icons/fi";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 
 export default function Dashboard() {
   const { isDark } = useTheme();
@@ -127,12 +128,12 @@ export default function Dashboard() {
 // Sidebar Link Component
 function SidebarLink({ href, icon, children }) {
   return (
-    <a
-      href={href}
+    <Link
+      to={href}
       className="flex items-center gap-3 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
     >
       {icon} {children}
-    </a>
+    </Link>
   );
 }
 
