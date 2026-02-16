@@ -15,6 +15,12 @@ const protect = async (req, res, next) => {
       // Get user from the token
       req.user = await userModel.getUserById(decoded.id);
 
+      if (!req.user) {
+        res.status(401).json({ message: 'Not authorized, user not found' });
+        return;
+      }
+
+
       next();
     } catch (error) {
       console.error(error);

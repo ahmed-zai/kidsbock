@@ -5,20 +5,17 @@ const errorHandler = (err, req, res, next) => {
   // Log error stack for debugging
   console.error(err.stack);
 
-  let error = { ...err }; // Create a copy to avoid modifying the original error object
-  error.message = err.message; // Ensure message is copied
+  let error = { ...err };
+  error.message = err.message; // Initially preserve the original message
 
-  // Handle specific AppError types
   if (err instanceof AppError) {
     error.statusCode = err.statusCode;
     error.status = err.status;
-    error.message = err.message;
     error.isOperational = err.isOperational;
   } else {
-    // For non-AppError (programming errors), default to 500
+    // For non-AppError (programming errors), default to 500, but only set generic message conditionally
     error.statusCode = 500;
     error.status = 'error';
-    error.message = 'Something went very wrong!'; // Generic message for programming errors
     error.isOperational = false;
   }
 
@@ -26,9 +23,9 @@ const errorHandler = (err, req, res, next) => {
   if (process.env.NODE_ENV === 'development') {
     res.status(error.statusCode).json({
       status: error.status,
-      error: error,
-      message: error.message,
-      stack: error.stack,
+      error: err, // Send the original error object in dev for full details
+      message: err.message, // Use the original error message
+      stack: err.stack,
     });
   } else if (process.env.NODE_ENV === 'production') {
     // Operational errors that we trust to send to client
@@ -41,14 +38,24 @@ const errorHandler = (err, req, res, next) => {
       // Programming or other unknown errors: don't leak details
       res.status(500).json({
         status: 'error',
-        message: 'Something went very wrong!',
+        message: 'Something went very wrong!', // Generic message for programming errors in production
       });
     }
-  } else { // Default or unknown environment
+  } else { // Default or unknown environment (treat similar to development for programming errors)
+    if (error.isOperational) {
       res.status(error.statusCode).json({
-          status: error.status,
-          message: error.message,
+        status: error.status,
+        message: error.message,
       });
+    } else {
+      // For programming errors in unknown env: send full error object for debugging
+      res.status(500).json({
+        status: 'error',
+        error: err, // Send original error object
+        message: err.message, // Send original message for debugging
+        stack: err.stack,
+      });
+    }
   }
 };
 

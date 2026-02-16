@@ -4,7 +4,7 @@ const booksController = {
 
   createBook: async (req, res, next) => {
     try {
-      const book = await booksModel.createBook(req.body);
+      const book = await bookModel.createBook(req.body);
       res.status(201).json({ book });
     } catch (err) {
       console.error('Error in createBook:', err);
@@ -14,7 +14,7 @@ const booksController = {
 
   getAllBooks: async (req, res, next) => {
     try {
-      const books = await booksModel.getAllBooks();
+      const books = await bookModel.getAllBooks();
       res.status(200).json({ books });
     } catch (err) {
       console.error('Error in getAllBooks:', err);
@@ -24,7 +24,7 @@ const booksController = {
 
   getBookById: async (req, res, next) => {
     try {
-      const book = await booksModel.getBookById(req.params.id);
+      const book = await bookModel.getBookById(req.params.id);
       if (!book) return res.status(404).json({ message: 'Book not found' });
       res.status(200).json({ book });
     } catch (err) {
@@ -35,7 +35,7 @@ const booksController = {
 
   updateBook: async (req, res, next) => {
     try {
-      const updatedBook = await booksModel.updateBook(req.params.id, req.body);
+      const updatedBook = await bookModel.updateBook(req.params.id, req.body);
       if (!updatedBook) return res.status(404).json({ message: 'Book not found or nothing to update' });
       res.status(200).json({ book: updatedBook });
     } catch (err) {
@@ -46,7 +46,7 @@ const booksController = {
 
   deleteBook: async (req, res, next) => {
     try {
-      const deletedBook = await booksModel.deleteBook(req.params.id);
+      const deletedBook = await bookModel.deleteBook(req.params.id);
       if (!deletedBook) return res.status(404).json({ message: 'Book not found' });
       res.status(200).json({ message: 'Book deleted', id: deletedBook.id });
     } catch (err) {

@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
-from ai_engine import analyze_reading_session
-from models import save_child_insight
+from .ai_engine import analyze_reading_session
+from .models import save_child_insight
 
 bp = Blueprint('ai', __name__)
 
