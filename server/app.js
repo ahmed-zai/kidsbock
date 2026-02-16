@@ -4,7 +4,7 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const { Pool } = require('pg');
-const routes = require('./routes');
+const routes = require('./routes'); // Re-enable modular routes import
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -26,10 +26,17 @@ global.db = pool; // make DB accessible in models
 // -----------------------------
 // MIDDLEWARE
 // -----------------------------
-app.use(cors());
+const corsOptions = {
+  origin: '*', // Allow all origins (for now, consider tightening in production)
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+app.use(cors(corsOptions));
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.set('trust proxy', 1); // Enable trusting of proxy headers for correct IP identification
 
 // Rate limiter
 const limiter = rateLimit({
@@ -42,7 +49,7 @@ app.use(limiter);
 // -----------------------------
 // ROUTES
 // -----------------------------
-app.use('/api', routes);
+app.use('/', routes); // Change to use root path
 
 // Health check
 app.get('/health', (req, res) => {

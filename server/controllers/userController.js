@@ -1,5 +1,5 @@
 const userModel = require('../models/userModel');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('../utils/jwt'); // your JWT helper
 
 const SALT_ROUNDS = 10;
@@ -22,11 +22,11 @@ const userController = {
       // Hash password
       const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
 
-      // Create user
       const user = await userModel.createUser({ full_name, email, password_hash });
+      console.log('User created. user:', user);
 
-      // Generate JWT token
-      const token = jwt.generateToken({ id: user.id, email: user.email, role: user.role });
+      const token = jwt.generateToken(user.id, user.role);
+      console.log('Token generated. Responding...');
 
       res.status(201).json({ user, token });
     } catch (err) {
@@ -48,7 +48,7 @@ const userController = {
       const isMatch = await bcrypt.compare(password, user.password_hash);
       if (!isMatch) return res.status(400).json({ message: 'Invalid email or password' });
 
-      const token = jwt.generateToken({ id: user.id, email: user.email, role: user.role });
+      const token = jwt.generateToken(user.id, user.role);
 
       res.status(200).json({ user, token });
     } catch (err) {

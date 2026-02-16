@@ -22,7 +22,7 @@ export default function Register() {
     }
 
     try {
-      await api.post("/users/register", { name, email, password });
+      await api.post("/users/register", { full_name: name, email, password });
 
       // Auto-login after registration
       await login(email, password);

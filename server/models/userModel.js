@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 const userModel = {
 
@@ -50,18 +50,21 @@ const userModel = {
 
   // Update user profile (example: full_name)
   updateUserProfile: async (id, fields = {}) => {
+    const allowedFields = ['full_name', 'email', 'plan_type']; // Whitelist of allowed columns to update
     const setClauses = [];
     const values = [];
     let i = 1;
 
     for (const key in fields) {
-      setClauses.push(`${key} = $${i}`);
-      values.push(fields[key]);
-      i++;
+      if (allowedFields.includes(key)) { // Only update allowed fields
+        setClauses.push(`${key} = $${i}`);
+        values.push(fields[key]);
+        i++;
+      }
     }
     values.push(id);
 
-    if (setClauses.length === 0) return null;
+    if (setClauses.length === 0) return null; // No allowed fields to update
 
     const query = `
       UPDATE users

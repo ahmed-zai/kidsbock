@@ -13,9 +13,18 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code into the container
 COPY . .
 
+# Create a non-root group and user
+RUN addgroup --system appuser && adduser --system --no-create-home appuser
+
+# Change ownership of /app to appuser (now that appuser exists)
+RUN chown -R appuser:appuser /app
+
+# Switch to the non-root user
+USER appuser
+
 # Expose the port that Flask will run on
 EXPOSE 5000
 
 # Run the Flask application with Gunicorn
 # The `app:app` refers to the 'app' variable in 'app.py' module.
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app"]
+CMD ["bash", "-c", "gunicorn -b 0.0.0.0:${FLASK_PORT} app:app"]

@@ -1,22 +1,35 @@
 FROM node:20-alpine as base 
 
 WORKDIR /app 
+RUN addgroup --system appuser && adduser --system --no-create-home appuser --ingroup appuser --shell /bin/sh --home /app # Create appuser with home in /app
+RUN chown -R appuser:appuser /app # Ensure /app is owned by appuser
+USER appuser 
+
+# --- Stage 1: Dependencies (for production) ---
+FROM base as deps
+COPY package.json .
+RUN npm config set cache /tmp/.npm-cache # Set npm cache for appuser
+RUN npm install --only=production
+RUN chown -R appuser:appuser /app/node_modules # Explicitly set ownership
+COPY . .
 
 FROM base as development 
 
 COPY package.json .
+RUN npm config set cache /tmp/.npm-cache # Set npm cache for appuser
 RUN npm install 
 
 COPY . . 
-
 EXPOSE 5000
-CMD ["npx","nodemon", "index.js" ]
+CMD ["npx","nodemon", "app.js" ]
 
 
-FROM base as production 
-
-COPY package.json .
-RUN npm install --only=production
-COPY . . 
+# --- Stage 3: Production (minimal image) ---
+FROM base as production
+ENV NODE_ENV=production
+# Copy only production node_modules from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+# Copy application code from deps stage
+COPY --from=deps /app .
 EXPOSE 5000
 CMD ["node", "app.js"]

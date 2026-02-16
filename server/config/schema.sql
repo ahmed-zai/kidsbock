@@ -1,11 +1,17 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+CREATE TYPE user_role AS ENUM ('parent', 'educator', 'admin');
+CREATE TYPE reading_level_enum AS ENUM ('beginner', 'intermediate', 'advanced');
+CREATE TYPE page_event_type AS ENUM ('open', 'next', 'previous', 'replay_audio');
+CREATE TYPE audio_event_action AS ENUM ('play', 'pause', 'replay');
+CREATE TYPE child_insight_type AS ENUM ('attention_span', 'difficulty_area');
+
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     full_name VARCHAR(150) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    role VARCHAR(50) NOT NULL DEFAULT 'parent',
+    password_hash VARCHAR(60) NOT NULL,
+    role user_role NOT NULL DEFAULT 'parent',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -16,7 +22,7 @@ CREATE TABLE children (
     name VARCHAR(100) NOT NULL,
     birth_date DATE NOT NULL,
     avatar_url TEXT,
-    reading_level VARCHAR(50) DEFAULT 'beginner',
+    reading_level reading_level_enum DEFAULT 'beginner',
     data_consent BOOLEAN DEFAULT FALSE, -- Added data_consent column
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -38,7 +44,7 @@ CREATE TABLE books (
     cover_image_url TEXT,
     content_url TEXT NOT NULL,
     audio_url TEXT,
-    reading_level VARCHAR(50),
+    reading_level reading_level_enum,
     age_min INT CHECK (age_min >= 0),
     age_max INT CHECK (age_max >= age_min),
     is_published BOOLEAN DEFAULT FALSE,
@@ -154,7 +160,7 @@ CREATE TABLE page_events (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     session_id UUID REFERENCES reading_sessions(id) ON DELETE CASCADE,
     page_number INT,
-    event_type VARCHAR(50), -- open, next, previous, replay_audio
+    event_type page_event_type, -- open, next, previous, replay_audio
     time_spent_seconds INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -165,14 +171,14 @@ CREATE TABLE audio_events (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     session_id UUID REFERENCES reading_sessions(id) ON DELETE CASCADE,
     page_number INT,
-    action VARCHAR(50), -- play, pause, replay
+    action audio_event_action, -- play, pause, replay
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE child_insights (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     child_id UUID REFERENCES children(id) ON DELETE CASCADE,
-    insight_type VARCHAR(100), -- attention_span, difficulty_area
+    insight_type child_insight_type, -- attention_span, difficulty_area
     score NUMERIC(5,2),
     summary TEXT,
     generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

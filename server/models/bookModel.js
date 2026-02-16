@@ -24,16 +24,19 @@ const booksModel = {
   },
 
   updateBook: async (id, fields = {}) => {
+    const allowedFields = ['title', 'description', 'cover_image_url', 'content_url', 'audio_url', 'reading_level', 'age_min', 'age_max', 'is_published', 'is_premium']; // Whitelist of allowed columns to update
     const setClauses = [];
     const values = [];
     let i = 1;
     for (const key in fields) {
-      setClauses.push(`${key} = $${i}`);
-      values.push(fields[key]);
-      i++;
+      if (allowedFields.includes(key)) { // Only update allowed fields
+        setClauses.push(`${key} = $${i}`);
+        values.push(fields[key]);
+        i++;
+      }
     }
     values.push(id);
-    if (setClauses.length === 0) return null;
+    if (setClauses.length === 0) return null; // No allowed fields to update
 
     const query = `
       UPDATE books
