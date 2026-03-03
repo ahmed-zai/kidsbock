@@ -52,6 +52,25 @@ const booksModel = {
     const query = `DELETE FROM books WHERE id = $1 RETURNING id`;
     const { rows } = await global.db.query(query, [id]);
     return rows[0];
+  },
+
+  getPagesByBook: async (book_id) => {
+    const query = `
+      SELECT * FROM book_pages
+      WHERE book_id = $1
+      ORDER BY page_number ASC
+    `;
+    const { rows } = await global.db.query(query, [book_id]);
+    return rows;
+  },
+
+  getPageByNumber: async (book_id, page_number) => {
+    const query = `
+      SELECT * FROM book_pages
+      WHERE book_id = $1 AND page_number = $2
+    `;
+    const { rows } = await global.db.query(query, [book_id, page_number]);
+    return rows[0];
   }
 };
 

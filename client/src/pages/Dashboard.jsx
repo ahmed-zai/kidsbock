@@ -83,9 +83,12 @@ export default function Dashboard() {
             <FiMenu className="text-xl" />
           </button>
           <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Welcome back 👋</h1>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition">
+          <Link 
+            to="/reading-session"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition"
+          >
             + New Session
-          </button>
+          </Link>
         </header>
 
         {/* Stats */}

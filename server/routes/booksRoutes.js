@@ -10,4 +10,7 @@ router.get('/:id', protect, booksController.getBookById);
 router.put('/:id', protect, booksController.updateBook);
 router.delete('/:id', protect, booksController.deleteBook);
 
+router.get('/:id/pages', protect, booksController.getPagesByBook);
+router.get('/:id/pages/:page_number', protect, booksController.getPageByNumber);
+
 module.exports = router;

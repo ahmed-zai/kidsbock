@@ -53,6 +53,28 @@ const booksController = {
       console.error('Error in deleteBook:', err);
       next(err);
     }
+  },
+
+  getPagesByBook: async (req, res, next) => {
+    try {
+      const pages = await bookModel.getPagesByBook(req.params.id);
+      res.status(200).json(pages);
+    } catch (err) {
+      console.error('Error in getPagesByBook:', err);
+      next(err);
+    }
+  },
+
+  getPageByNumber: async (req, res, next) => {
+    try {
+      const { id, page_number } = req.params;
+      const page = await bookModel.getPageByNumber(id, page_number);
+      if (!page) return res.status(404).json({ message: 'Page not found' });
+      res.status(200).json(page);
+    } catch (err) {
+      console.error('Error in getPageByNumber:', err);
+      next(err);
+    }
   }
 
 };

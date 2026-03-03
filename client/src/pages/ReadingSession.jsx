@@ -5,7 +5,9 @@ import InsightCard from '../components/InsightCard';
 
 export default function ReadingSession() {
   const [books, setBooks] = useState([]);
+  const [children, setChildren] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
+  const [selectedChild, setSelectedChild] = useState(null);
   const [session, setSession] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageCount, setPageCount] = useState(0);
@@ -13,16 +15,24 @@ export default function ReadingSession() {
   const [deviceType, setDeviceType] = useState('tablet');
   const [pageContent, setPageContent] = useState(null);
 
-  // Fetch books on mount
+  // Fetch books and children on mount
   useEffect(() => {
     api.get('/books')
-      .then(res => setBooks(res.data))
+      .then(res => setBooks(res.data.books || res.data))
+      .catch(err => console.error(err));
+    
+    api.get('/children')
+      .then(res => {
+        const childrenList = res.data.children || res.data;
+        setChildren(childrenList);
+        if (childrenList.length > 0) setSelectedChild(childrenList[0]);
+      })
       .catch(err => console.error(err));
   }, []);
 
   // Fetch page content whenever book or page changes
   useEffect(() => {
-    if (selectedBook && currentPage > 0 && currentPage <= pageCount) {
+    if (selectedBook && currentPage > 0 && (pageCount === 0 || currentPage <= pageCount)) {
       api.get(`/books/${selectedBook.id}/pages/${currentPage}`)
         .then(res => setPageContent(res.data))
         .catch(err => console.error(err));
@@ -41,9 +51,10 @@ export default function ReadingSession() {
 
   const handleStartSession = async () => {
     if (!selectedBook) return alert('Select a book first');
+    if (!selectedChild) return alert('Select a child first');
     try {
       const res = await api.post('/sessions/start', {
-        child_id: 'YOUR_CHILD_ID', // replace with real child ID
+        child_id: selectedChild.id,
         book_id: selectedBook.id,
         device_type: deviceType,
       });
@@ -61,7 +72,7 @@ export default function ReadingSession() {
         session_id: session.id,
         page_number: currentPage,
         event_type: eventType,
-        time_spent_seconds: 1, // can integrate timer logic for real time
+        time_spent_seconds: 1, 
       });
     } catch (err) {
       console.error(err);
@@ -109,101 +120,158 @@ export default function ReadingSession() {
     }
   };
 
+  const handleBackToSelection = () => {
+    setSession(null);
+    setCurrentPage(1);
+    setPageContent(null);
+  };
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Interactive Reading Session</h1>
 
-      {/* Book selection */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        {books.map(book => (
-          <div
-            key={book.id}
-            className={`cursor-pointer p-2 border rounded ${
-              selectedBook?.id === book.id ? 'border-blue-600 bg-blue-50' : ''
-            }`}
-            onClick={() => setSelectedBook(book)}
-          >
-            <BookCard book={book} />
+      {!session ? (
+        <>
+          {/* Child selection */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Select Child:</label>
+            <div className="flex gap-4">
+              {children.length === 0 ? (
+                <p className="text-red-500">No children found. Please add a child first.</p>
+              ) : (
+                children.map(child => (
+                  <div
+                    key={child.id}
+                    onClick={() => setSelectedChild(child)}
+                    className={`cursor-pointer p-4 border rounded-xl flex items-center gap-3 transition ${
+                      selectedChild?.id === child.id ? 'border-blue-600 bg-blue-50' : 'border-gray-200'
+                    }`}
+                  >
+                    <img src={child.avatar_url || 'https://via.placeholder.com/50'} alt={child.name} className="w-10 h-10 rounded-full" />
+                    <span className="font-semibold">{child.name}</span>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        ))}
-      </div>
 
-      {/* Device selection */}
-      <div className="mb-4">
-        <label className="mr-2">Device:</label>
-        <select
-          value={deviceType}
-          onChange={e => setDeviceType(e.target.value)}
-          className="border p-1 rounded"
-        >
-          <option value="tablet">Tablet</option>
-          <option value="mobile">Mobile</option>
-          <option value="desktop">Desktop</option>
-        </select>
-      </div>
+          {/* Book selection */}
+          <h2 className="text-lg font-semibold mb-2">Select a Book:</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            {books.map(book => (
+              <div
+                key={book.id}
+                className={`cursor-pointer p-2 border rounded ${
+                  selectedBook?.id === book.id ? 'border-blue-600 bg-blue-50' : ''
+                }`}
+                onClick={() => setSelectedBook(book)}
+              >
+                <BookCard book={book} />
+              </div>
+            ))}
+          </div>
 
-      {/* Start/End session */}
-      <div className="mb-4">
-        {!session ? (
-          <button
-            onClick={handleStartSession}
-            className="bg-green-500 text-white px-4 py-2 rounded"
-          >
-            Start Session
-          </button>
-        ) : (
-          <button
-            onClick={handleEndSession}
-            className="bg-red-500 text-white px-4 py-2 rounded"
-          >
-            End Session
-          </button>
-        )}
-      </div>
-
-      {/* Page display */}
-      {session && pageContent && (
-        <div className="border p-4 rounded mb-4">
-          <h2 className="font-semibold mb-2">Page {currentPage}</h2>
-          <p className="mb-2">{pageContent.text_content}</p>
-          {pageContent.image_url && (
-            <img src={pageContent.image_url} alt={`Page ${currentPage}`} className="mb-2" />
-          )}
-          {pageContent.audio_url && (
-            <audio
-              src={pageContent.audio_url}
-              controls
-              onPlay={() => handleAudioEvent('play')}
-              onPause={() => handleAudioEvent('pause')}
-            />
-          )}
-
-          <div className="mt-2 flex justify-between">
-            <button
-              onClick={prevPage}
-              disabled={currentPage === 1}
-              className="bg-gray-300 px-3 py-1 rounded disabled:opacity-50"
+          {/* Device selection */}
+          <div className="mb-4">
+            <label className="mr-2">Device:</label>
+            <select
+              value={deviceType}
+              onChange={e => setDeviceType(e.target.value)}
+              className="border p-1 rounded"
             >
-              Previous
-            </button>
+              <option value="tablet">Tablet</option>
+              <option value="mobile">Mobile</option>
+              <option value="desktop">Desktop</option>
+            </select>
+          </div>
+
+          <div className="mb-4">
             <button
-              onClick={nextPage}
-              disabled={currentPage === pageCount}
-              className="bg-blue-500 text-white px-3 py-1 rounded disabled:opacity-50"
+              onClick={handleStartSession}
+              className="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-600 transition"
             >
-              Next
+              Start Session
             </button>
           </div>
-        </div>
+        </>
+      ) : (
+        <>
+          <div className="flex justify-between items-center mb-4">
+            <button
+              onClick={handleBackToSelection}
+              className="text-blue-600 hover:underline flex items-center gap-1"
+            >
+              ← Back to Selection
+            </button>
+            <button
+              onClick={handleEndSession}
+              className="bg-red-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-600 transition"
+            >
+              End Session
+            </button>
+          </div>
+
+          {/* Page display */}
+          {pageContent && (
+            <div className="bg-white border rounded-2xl p-8 shadow-sm mb-4">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold">Page {currentPage} of {pageCount}</h2>
+                <span className="text-sm text-gray-500">Reading with {selectedChild?.name}</span>
+              </div>
+              
+              <div className="flex flex-col md:flex-row gap-8">
+                {pageContent.image_url && (
+                  <div className="flex-1 text-center">
+                    <img src={pageContent.image_url} alt={`Page ${currentPage}`} className="max-w-full h-auto rounded-xl shadow-md mx-auto" />
+                  </div>
+                )}
+                <div className="flex-1 flex flex-col justify-center">
+                  <p className="text-2xl leading-relaxed text-gray-800 mb-6">{pageContent.text_content}</p>
+                  
+                  {pageContent.audio_url && (
+                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-6">
+                      <audio
+                        src={pageContent.audio_url}
+                        controls
+                        className="w-full"
+                        onPlay={() => handleAudioEvent('play')}
+                        onPause={() => handleAudioEvent('pause')}
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center gap-4">
+                    <button
+                      onClick={prevPage}
+                      disabled={currentPage === 1}
+                      className="flex-1 bg-gray-100 py-3 rounded-xl font-semibold disabled:opacity-50 transition hover:bg-gray-200"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={nextPage}
+                      disabled={currentPage === pageCount}
+                      className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold disabled:opacity-50 transition hover:bg-blue-700 shadow-md"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* AI Insights */}
       {insights.length > 0 && (
-        <div>
-          <h2 className="text-xl font-semibold mb-2">AI Insights</h2>
-          {insights.map(insight => (
-            <InsightCard key={insight.id} insight={insight} />
-          ))}
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-4">AI Insights</h2>
+          <div className="grid gap-4">
+            {insights.map(insight => (
+              <InsightCard key={insight.id} insight={insight} />
+            ))}
+          </div>
         </div>
       )}
     </div>
