@@ -58,6 +58,23 @@ const userController = {
   },
 
   // -----------------------------
+  // GET CURRENT USER (from token)
+  // -----------------------------
+  getCurrentUser: async (req, res, next) => {
+    try {
+      // req.user is set by protect middleware from the JWT token
+      const user = await userModel.getUserById(req.user.id);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+
+      // return in same shape as other profile endpoints
+      res.status(200).json({ user });
+    } catch (err) {
+      console.error('Error in getCurrentUser:', err);
+      next(err);
+    }
+  },
+
+  // -----------------------------
   // GET USER PROFILE
   // -----------------------------
   getUserProfile: async (req, res, next) => {
@@ -105,3 +122,4 @@ const userController = {
 };
 
 module.exports = userController;
+

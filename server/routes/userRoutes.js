@@ -8,6 +8,7 @@ router.post('/register', userController.registerUser);
 router.post('/login', userController.loginUser);
 
 // Protected routes
+router.get('/me', protect, userController.getCurrentUser); // new endpoint to get logged-in user
 router.get('/:id', protect, userController.getUserProfile);
 router.put('/:id/plan', protect, userController.updatePlan);
 

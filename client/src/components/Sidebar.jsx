@@ -1,8 +1,16 @@
-import { Link, useLocation } from "react-router-dom";
-import { BookOpen, BarChart3, Users, Home } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { BookOpen, BarChart3, Users, Home, LogOut } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 export default function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   const linkStyle = (path) =>
     `flex items-center gap-3 p-3 rounded-lg transition ${
@@ -12,11 +20,11 @@ export default function Sidebar() {
     }`;
 
   return (
-    <div className="h-screen w-64 bg-white border-r shadow-sm p-4">
+    <div className="h-screen w-64 bg-white border-r shadow-sm p-4 flex flex-col">
       <h2 className="text-xl font-bold text-blue-600 mb-8">📚 Kids Reader</h2>
 
-      <nav className="flex flex-col gap-2">
-        <Link to="/" className={linkStyle("/")}>
+      <nav className="flex flex-col gap-2 flex-1">
+        <Link to="/dashboard" className={linkStyle("/dashboard")}>
           <Home size={20} />
           Dashboard
         </Link>
@@ -26,7 +34,7 @@ export default function Sidebar() {
           My Children
         </Link>
 
-        <Link to="/sessions" className={linkStyle("/sessions")}>
+        <Link to="/reading-session" className={linkStyle("/reading-session")}>
           <BookOpen size={20} />
           Reading Sessions
         </Link>
@@ -37,7 +45,15 @@ export default function Sidebar() {
         </Link>
       </nav>
 
-      <div className="absolute bottom-6 left-4 text-sm text-gray-400">
+      <button
+        onClick={handleLogout}
+        className="flex items-center gap-3 p-3 rounded-lg text-gray-700 hover:bg-red-100 hover:text-red-600 transition mt-auto"
+      >
+        <LogOut size={20} />
+        Log out
+      </button>
+
+      <div className="mt-4 text-sm text-gray-400">
         Parent Panel v1.0
       </div>
     </div>

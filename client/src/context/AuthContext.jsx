@@ -32,12 +32,14 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem("token");
       if (token) {
         try {
-          // Set token in api headers - REMOVED, now handled by axios interceptor
+          // Set token in api headers - handled by axios interceptor
           const res = await api.get("/users/me");
-          setUser(res.data);
+          // endpoint returns { user } now, but just in case handle both shapes
+          const fetchedUser = res.data.user || res.data;
+          setUser(fetchedUser);
         } catch (err) {
           console.error("Failed to load user", err);
-          logout(); // remove invalid token
+          logout(); // remove invalid or expired token
         }
       }
       setLoading(false);

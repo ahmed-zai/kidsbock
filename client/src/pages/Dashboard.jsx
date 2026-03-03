@@ -2,13 +2,16 @@
 import { useEffect, useState } from "react";
 import api from "../api/api";
 import { useTheme } from "../context/ThemeContext";
-import { FiUsers, FiBook, FiAward, FiActivity, FiMenu, FiX } from "react-icons/fi";
+import { useAuth } from "../context/AuthContext";
+import { FiUsers, FiBook, FiAward, FiActivity, FiMenu, FiX, FiLogOut } from "react-icons/fi";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
   const { isDark } = useTheme();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState({
     childrenCount: 0,
     sessionsCount: 0,
@@ -17,6 +20,11 @@ export default function Dashboard() {
     progressHistory: [],
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -48,6 +56,12 @@ export default function Dashboard() {
               <SidebarLink href="/children" icon={<FiUsers />}>Children</SidebarLink>
               <SidebarLink href="/reading-session" icon={<FiBook />}>Reading Sessions</SidebarLink>
               <SidebarLink href="/progress" icon={<FiAward />}>Progress</SidebarLink>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 transition p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left"
+              >
+                <FiLogOut /> Log out
+              </button>
             </nav>
             <button
               onClick={() => setSidebarOpen(false)}
