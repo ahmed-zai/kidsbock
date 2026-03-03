@@ -7,12 +7,12 @@ const aiInsightController = {
     try {
       const { child_id, insight_type, score, summary } = req.body;
 
-      // Access control: Only admin or the parent of the child can save insights
-      // This check might need to be more robust, potentially checking child ownership directly
-      // For now, assuming req.user.id is the parent ID if not admin
-      if (req.user.role !== 'admin' && req.user.id !== child_id) { // This check req.user.id !== child_id is incorrect as child_id is not user_id
-        // A better check would be to verify if req.user.id is the parent of child_id
-        // For simplicity, let's allow admin or assume the frontend sends correct child_id for the user
+      // 🔐 Verify parent owns the child
+      if (req.user.role !== 'admin') {
+        const child = await childModel.getChildById(child_id);
+        if (!child || child.user_id !== req.user.id) {
+          return res.status(403).json({ message: 'Access denied' });
+        }
       }
       
       const insight = await insightModel.saveInsight({ child_id, insight_type, score, summary });

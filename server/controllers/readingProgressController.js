@@ -1,4 +1,5 @@
 const progressModel = require('../models/progressModel');
+const childModel = require('../models/childModel');
 
 const readingProgressController = {
 
@@ -6,9 +7,12 @@ const readingProgressController = {
     try {
       const { child_id, book_id, last_page_read, progress_percent, completed } = req.body;
 
-      // Ensure user owns the child
-      if (req.user.role !== 'admin' && req.user.id !== child_id) {
-        return res.status(403).json({ message: 'Access denied' });
+      // 🔐 Verify parent owns the child
+      if (req.user.role !== 'admin') {
+        const child = await childModel.getChildById(child_id);
+        if (!child || child.user_id !== req.user.id) {
+          return res.status(403).json({ message: 'Access denied' });
+        }
       }
 
       const progress = await readingProgressModel.updateProgress({ child_id, book_id, last_page_read, progress_percent, completed });
@@ -22,7 +26,14 @@ const readingProgressController = {
   getProgressByChild: async (req, res, next) => {
     try {
       const child_id = req.params.child_id;
-      if (req.user.role !== 'admin' && req.user.id !== child_id) return res.status(403).json({ message: 'Access denied' });
+      
+      // 🔐 Verify parent owns the child
+      if (req.user.role !== 'admin') {
+        const child = await childModel.getChildById(child_id);
+        if (!child || child.user_id !== req.user.id) {
+          return res.status(403).json({ message: 'Access denied' });
+        }
+      }
 
       const progress = await readingProgressModel.getProgressByChild(child_id);
       res.status(200).json({ progress });

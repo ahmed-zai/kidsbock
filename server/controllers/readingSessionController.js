@@ -37,6 +37,17 @@ const readingSessionController = {
     try {
       const { session_id, end_time, total_minutes } = req.body;
 
+      // 🔐 Verify session ownership
+      const existingSession = await readingSessionModel.getSessionById(session_id);
+      if (!existingSession) return res.status(404).json({ message: 'Session not found' });
+
+      if (req.user.role !== 'admin') {
+        const child = await childModel.getChildById(existingSession.child_id);
+        if (!child || child.user_id !== req.user.id) {
+          return res.status(403).json({ message: 'Access denied' });
+        }
+      }
+
       const session = await readingSessionModel.endSession({ session_id, end_time, total_minutes });
       if (!session) return res.status(404).json({ message: 'Session not found' });
 
@@ -73,6 +84,15 @@ const readingSessionController = {
       const results = [];
 
       for (const s of sessions) {
+        // 🔐 Verify session ownership
+        const existingSession = await readingSessionModel.getSessionById(s.session_id);
+        if (!existingSession) continue;
+
+        if (req.user.role !== 'admin') {
+          const child = await childModel.getChildById(existingSession.child_id);
+          if (!child || child.user_id !== req.user.id) continue;
+        }
+
         const session = await readingSessionModel.endSession(s);
         if (!session) continue;
 

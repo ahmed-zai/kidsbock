@@ -97,16 +97,16 @@ const userController = {
   },
 
   // -----------------------------
-  // UPDATE USER PLAN
+  // UPDATE USER PLAN (Admin only)
   // -----------------------------
   updatePlan: async (req, res, next) => {
     try {
       const userId = req.params.id;
       const { plan_type } = req.body;
 
-      // Only admin or user themselves can update
-      if (req.user.id !== userId && req.user.role !== 'admin') {
-        return res.status(403).json({ message: 'Access denied' });
+      // 🔐 ONLY admin can update plans (prevent self-upgrade bypass)
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Access denied. Admins only.' });
       }
 
       const updatedUser = await userModel.updateUserPlan(userId, plan_type);

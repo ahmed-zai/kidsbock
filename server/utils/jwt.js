@@ -9,7 +9,7 @@ require('dotenv').config();
  */
 const generateToken = (userId, role) => {
   return jwt.sign({ id: userId, role }, process.env.JWT_SECRET, {
-    expiresIn: '1d', // token valid for 7 days
+    expiresIn: '7d', // token valid for 7 days
   });
 };
 

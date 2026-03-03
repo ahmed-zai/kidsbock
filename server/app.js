@@ -1,11 +1,16 @@
 require('dotenv').config();
+const validateEnv = require('./utils/validateEnv');
+validateEnv();
+
 const express = require('express');
+const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const { Pool } = require('pg');
 const routes = require('./routes'); // Re-enable modular routes import
 const errorHandler = require('./middleware/errorHandler');
+const logger = require('./middleware/logger');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,13 +31,15 @@ global.db = pool; // make DB accessible in models
 // -----------------------------
 // MIDDLEWARE
 // -----------------------------
+app.use(helmet()); // Basic security headers
 const corsOptions = {
-  origin: '*', // Allow all origins (for now, consider tightening in production)
+  origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173', // Restrict origin
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
 };
 app.use(cors(corsOptions));
-app.use(morgan('dev'));
+app.use(logger.middleware); // Use Winston-integrated morgan middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

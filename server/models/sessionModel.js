@@ -14,6 +14,13 @@ const readingSessionModel = {
     return result.rows[0];
   },
 
+  // Get session by ID
+  getSessionById: async (id) => {
+    const query = `SELECT * FROM reading_sessions WHERE id = $1`;
+    const { rows } = await db.query(query, [id]);
+    return rows[0];
+  },
+
   // End a session and fetch page/audio events
   endSession: async ({ session_id, end_time, total_minutes }) => {
     try {
