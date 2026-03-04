@@ -1,20 +1,20 @@
 # flask_app/tests/test_models.py
 import pytest
 from unittest.mock import MagicMock, patch
-from models import save_child_insight, get_db_connection
-from config import Config
+from flask_app.models import save_child_insight, get_db_connection
+from flask_app.config import Config
 
 # Mock Config.DATABASE_URL
 # @patch is a decorator that temporarily replaces objects with mocks
 # We need to mock Config.DATABASE_URL because get_db_connection uses it.
-@patch('config.Config.DATABASE_URL', 'postgresql://test:test@test_db:5432/test_db')
+@patch('flask_app.config.Config.DATABASE_URL', 'postgresql://test:test@test_db:5432/test_db')
 def test_get_db_connection():
     # Mock psycopg2.connect
     with patch('psycopg2.connect') as mock_connect:
         get_db_connection()
         mock_connect.assert_called_once_with('postgresql://test:test@test_db:5432/test_db')
 
-@patch('models.get_db_connection')
+@patch('flask_app.models.get_db_connection')
 def test_save_child_insight(mock_get_db_connection):
     # Setup mocks for connection and cursor
     mock_conn = MagicMock()

@@ -1,4 +1,5 @@
 // server/__tests__/models/userModel.test.js
+jest.unmock('../../models/userModel');
 const userModel = require('../../models/userModel');
 
 // Mock the global.db object

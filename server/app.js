@@ -71,6 +71,10 @@ app.use(errorHandler);
 // -----------------------------
 // START SERVER
 // -----------------------------
-app.listen(PORT, () => {
-  console.log(`HKids backend running on port ${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`HKids backend running on port ${PORT}`);
+  });
+}
+
+module.exports = app;

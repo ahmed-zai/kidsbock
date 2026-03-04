@@ -1,6 +1,6 @@
 from flask import Flask
-from routes import bp
-from config import Config
+from .routes import bp
+from .config import Config
 import os # Import os module
 
 app = Flask(__name__)

@@ -1,6 +1,9 @@
 const { cleanEnv, str, port, url } = require('envalid');
 
 const validateEnv = () => {
+  if (process.env.NODE_ENV === 'test') {
+    return; // Bypass validation in test environment
+  }
   cleanEnv(process.env, {
     NODE_ENV: str({ choices: ['development', 'test', 'production'] }),
     PORT: port(),
